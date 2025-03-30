@@ -13,39 +13,43 @@ using namespace std;
 
 const QStringList Plugin::icon_urls = {"gen:?text=☕️"};
 
-static QString durationString(uint minutes)
+static QString durationString(uint min)
 {
-    uint hours = minutes / 60;
-    minutes -= hours * 60;
-    return QStringLiteral("%1:%2")
-        .arg(hours, 2, 10, QChar('0'))
-        .arg(minutes, 2, 10, QChar('0'));
+    const auto &[h, m] = div(min, 60);
+    QStringList parts;
+    if (h > 0) parts.append(Plugin::tr("%n hour(s)",   "accusative case", h));
+    if (m > 0) parts.append(Plugin::tr("%n minute(s)", "accusative case", m));
+    return parts.join(Plugin::tr(" and "));
 }
 
-static optional<uint> parseDurationStringToMinutes(const QString &s)
+static uint parseDurationString(const QString &s)
 {
-    auto fields = s.split(':');
-    if (fields.size() > 2)
-        return 0;
+    static QRegularExpression re_nat(R"(^(?:(\d+)h\ *)?(?:(\d+)m)?$)");
+    static QRegularExpression re_dig(R"(^(?|(\d+):(\d*)|()(\d+))$)");
 
-    bool ok;
     uint minutes = 0;
-    uint scalar = 1;
-    for (auto it = fields.rbegin(); it != fields.rend(); ++it)
+    if (auto m = re_nat.match(s); m.hasMatch() && m.capturedLength())  // required because all optional matches empty string
     {
-        int val = 0;
-        if (!it->isEmpty()) {
-            val = it->toInt(&ok);
-            if (!ok || val < 0)
-                return {};
-        }
-        minutes += val * scalar;
-        scalar *= 60;
+        if (m.capturedLength(1)) minutes += m.captured(1).toInt() * 60;  // hours
+        if (m.capturedLength(2)) minutes += m.captured(2).toInt();       // minutes
+    }
+    else if (m = re_dig.match(s); m.hasMatch())
+    {
+        // hasCaptured is 6.3
+        if (m.capturedLength(1)) minutes += m.captured(1).toInt() * 60;  // hours
+        if (m.capturedLength(2)) minutes += m.captured(2).toInt();       // minutes
     }
     return minutes;
 }
 
-Plugin::Plugin()
+Plugin::Plugin():
+    strings({
+        .caffeine=tr("Caffeine"),
+        .sleep_inhibition=tr("Sleep inhibition"),
+        .activate_sleep_inhibition=tr("Activate sleep inhibition"),
+        .activate_sleep_inhibition_for_n_minutes=tr("Activate sleep inhibition for %1"),
+        .deactivate_sleep_inhibition=tr("Deactivate sleep inhibition")
+    })
 {
 #if defined(Q_OS_MAC)
     process.setProgram("caffeinate");
@@ -58,7 +62,7 @@ Plugin::Plugin()
                           "sleep",
                           "infinity"});
 #else
-    throw std::runtime_error("Unsupported OS");
+    throw runtime_error("Unsupported OS");
 #endif
 
     if (auto e = QStandardPaths::findExecutable(process.program()); e.isEmpty())
@@ -84,41 +88,15 @@ QWidget* Plugin::buildConfigWidget()
     auto *w = new QWidget;
     Ui::ConfigWidget ui;
     ui.setupUi(w);
-
     ALBERT_PROPERTY_CONNECT_SPINBOX(this, default_timeout, ui.spinBox_minutes)
-
-    // ui.verticalLayout->addStretch();
-
     return w;
 }
 
-QString Plugin::synopsis(const QString &) const { return tr("[h:]min"); }
+QString Plugin::synopsis(const QString &) const { return tr("[duration]"); }
 
 void Plugin::setTrigger(const QString &t) { trigger = t; }
 
 QString Plugin::defaultTrigger() const { return tr("si ", "abbr of name()"); }
-
-void Plugin::handleTriggerQuery(Query &query){ query.add(makeItem(query.string())); }
-
-vector<RankItem> Plugin::handleGlobalQuery(const Query &query)
-{
-    auto item = makeItem();
-    vector<RankItem> r;
-    Matcher matcher(query.string());
-    if (auto m = matcher.match(trigger, item->text(), item->subtext()); m)
-        r.emplace_back(item, m);
-    return r;
-}
-
-vector<shared_ptr<Item>> Plugin::handleEmptyQuery()
-{
-    vector<shared_ptr<Item>> results;
-
-    if (process.state() == QProcess::Running)
-        results.emplace_back(makeItem());
-
-    return results;
-}
 
 void Plugin::start(uint minutes)
 {
@@ -129,10 +107,11 @@ void Plugin::start(uint minutes)
         WARN << "Sleep inhibition failed" << process.errorString();
     else
     {
-        INFO << "Sleep inhibition started";
+        INFO << "Sleep inhibition activated";
 
-        notification.setTitle(tr("Albert inhibits sleep"));
-        notification.setText(tr("Click to stop the sleep inhibition"));
+        notification.setText(tr("Sleep inhibition activated.") + "\n"
+                             + tr("Click to deactivate."));
+        notification.dismiss();
         notification.send();
 
         if (minutes > 0)
@@ -142,94 +121,80 @@ void Plugin::start(uint minutes)
 
 void Plugin::stop()
 {
-    if (process.state() == QProcess::Running)
+    if (isActive())
     {
-        INFO << "Sleep inhibition stoppped";
+        INFO << "Sleep inhibition deactivated";
+
+        notification.setText(tr("Sleep inhibition deactivated."));
         notification.dismiss();
+        notification.send();
+
         process.kill();
         process.waitForFinished();
         timer.stop();
     }
 }
 
-static QString makeActionName(uint minutes)
+bool Plugin::isActive() const { return process.state() == QProcess::Running; }
+
+QString Plugin::makeActionName(uint minutes) const
 {
     if (minutes)
-        return Plugin::tr("Inhibit sleep for %1").arg(durationString(minutes));
+        return strings.activate_sleep_inhibition_for_n_minutes.arg(durationString(minutes));
     else
-        return Plugin::tr("Inhibit sleep");
+        return strings.activate_sleep_inhibition;
 }
 
-std::shared_ptr<Item> Plugin::makeItem(const QString &query_string)
+shared_ptr<Item> Plugin::makeTriggerItem(const QString action_name, function<void()> action)
 {
-    if (query_string.isEmpty())
-    {
-        if (process.state() == QProcess::Running)
-        {
-            // Stop
-            auto action_name = tr("Stop sleep inhibition");
-            return StandardItem::make(
-                id(), name(), action_name, defaultTrigger(), icon_urls,
-                {{ id(), action_name, [this]{ stop(); } }}
-                );
-        }
-        else
-        {
-            // Start default
-            auto action_name = makeActionName(default_timeout_);
-            return StandardItem::make(
-                id(), name(), action_name, defaultTrigger(), icon_urls,
-                {{ id(), action_name, [this]{ start(default_timeout_); } }}
-                );
-        }
-    }
-    else
-    {
-        auto minutes = parseDurationStringToMinutes(query_string);
-        if (minutes)
-        {
-            if (process.state() == QProcess::Running)
-            {
-                // Restart with given timeout
-                auto action_name = makeActionName(minutes.value());
-                return StandardItem::make(
-                    id(), name(), action_name, icon_urls,
-                    {{ id(), action_name, [this, m=minutes.value()]{ start(m); } }}
-                    );
-            }
-            else
-            {
-                // Start with given timeout
-                auto action_name = makeActionName(minutes.value());
-                return StandardItem::make(
-                    id(), name(), action_name, icon_urls,
-                    {{ id(), action_name, [this, m=minutes.value()]{ start(m); } }}
-                    );
-            }
-        }
-        else
-        {
-            // Invalid query
-            auto t = tr("Invalid interval. %1.");
+    return StandardItem::make(id(), name(), action_name, icon_urls,
+                              {{ id(), action_name, action }});
+}
 
-            if (process.state() == QProcess::Running)
-            {
-                // Stop
-                auto action_name = tr("Stop sleep inhibition");
-                return StandardItem::make(
-                    id(), name(), t.arg(action_name), defaultTrigger(), icon_urls,
-                    {{ id(), action_name, [this]{ stop(); } }}
-                    );
-            }
-            else
-            {
-                // Start indefinitely
-                auto action_name = makeActionName(default_timeout_);
-                return StandardItem::make(
-                    id(), name(), t.arg(action_name), defaultTrigger(), icon_urls,
-                    {{ id(), action_name, [this]{ start(default_timeout_); } }}
-                    );
-            }
-        }
+shared_ptr<Item> Plugin::makeGlobalItem(const QString action_name, function<void()> action)
+{
+    return StandardItem::make(id(), name(), action_name, name(), icon_urls,
+                              {{ id(), action_name, action }});
+}
+
+void Plugin::handleTriggerQuery(Query &query)
+{
+    if (auto s = query.string().trimmed(); s.isEmpty())
+
+        if (isActive())
+            query.add(makeTriggerItem(strings.deactivate_sleep_inhibition,
+                                      [this]{ stop(); }));
+        else
+            query.add(makeTriggerItem(makeActionName(default_timeout_),
+                                      [this]{ start(default_timeout_); }));
+
+    else if (auto minutes = parseDurationString(s); minutes)
+
+        query.add(makeTriggerItem(makeActionName(minutes),
+                                  [this, minutes]{ start(minutes); }));
+}
+
+vector<RankItem> Plugin::handleGlobalQuery(const Query &query)
+{
+    vector<RankItem> r;
+    if (auto m = Matcher(query).match(strings.caffeine, strings.sleep_inhibition); m)
+    {
+        if (isActive())
+            r.emplace_back(makeTriggerItem(strings.deactivate_sleep_inhibition,
+                                           [this]{ stop(); }),
+                           m);
+        else
+            r.emplace_back(makeTriggerItem(makeActionName(default_timeout_),
+                                           [this]{ start(default_timeout_); }),
+                           m);
     }
+    return r;
+}
+
+vector<shared_ptr<Item>> Plugin::handleEmptyQuery()
+{
+    vector<shared_ptr<Item>> r;
+    if (isActive())
+        r.emplace_back(makeTriggerItem(strings.deactivate_sleep_inhibition, [this]{ stop(); }));
+    return r;
 }

@@ -20,37 +20,73 @@
 <context>
     <name>Plugin</name>
     <message>
-        <source>[h:]min</source>
-        <translation>[Stunden:]Minuten</translation>
-    </message>
-    <message>
         <source>si </source>
         <comment>abbr of name()</comment>
         <translation>su </translation>
     </message>
     <message>
         <source>Albert inhibits sleep</source>
-        <translation>Albert unterdrückt den Schlafmodus</translation>
+        <translation type="vanished">Albert unterdrückt den Schlafmodus</translation>
     </message>
     <message>
-        <source>Click to stop the sleep inhibition</source>
-        <translation>Klicken um die Schlafmodusunterdrückung zu stoppen</translation>
+        <source>Caffeine</source>
+        <translation>Koffein</translation>
     </message>
     <message>
-        <source>Inhibit sleep for %1</source>
-        <translation>Schlafmodus für %1 unterdrücken</translation>
+        <source>Sleep inhibition</source>
+        <translation>Schlafmodusunterdrückung</translation>
     </message>
     <message>
-        <source>Inhibit sleep</source>
-        <translation>Schlafmodus unterdrücken</translation>
+        <source>Activate sleep inhibition</source>
+        <translation>Schlafmodusunterdrückung aktivieren</translation>
     </message>
     <message>
-        <source>Stop sleep inhibition</source>
-        <translation>Schlafmodusunterdrückung stoppen</translation>
+        <source>Activate sleep inhibition for %1</source>
+        <translation>Schlafmodusunterdrückung für %1 aktivieren</translation>
     </message>
     <message>
-        <source>Invalid interval. %1.</source>
-        <translation>Ungültiges Interval. %1.</translation>
+        <source>Deactivate sleep inhibition</source>
+        <translation>Schlafmodusunterdrückung deaktivieren</translation>
+    </message>
+    <message>
+        <source>[duration]</source>
+        <translation>[Dauer]</translation>
+    </message>
+    <message>
+        <source>Click to deactivate sleep inhibition</source>
+        <translation type="vanished">Klicken um die Schlafmodusunterdrückung zu deaktivieren</translation>
+    </message>
+    <message>
+        <source> and </source>
+        <translation> und </translation>
+    </message>
+    <message numerus="yes">
+        <source>%n hour(s)</source>
+        <comment>accusative case</comment>
+        <translation>
+            <numerusform>eine Stunde</numerusform>
+            <numerusform>%n Stunden</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>%n minute(s)</source>
+        <comment>accusative case</comment>
+        <translation>
+            <numerusform>eine Minute</numerusform>
+            <numerusform>%n Minuten</numerusform>
+        </translation>
+    </message>
+    <message>
+        <source>Sleep inhibition activated.</source>
+        <translation>Schlafmodusunterdrückung aktiviert.</translation>
+    </message>
+    <message>
+        <source>Click to deactivate.</source>
+        <translation>Zum Deaktivieren klicken.</translation>
+    </message>
+    <message>
+        <source>Sleep inhibition deactivated.</source>
+        <translation>Schlafmodusunterdrückung deaktiviert.</translation>
     </message>
 </context>
 </TS>

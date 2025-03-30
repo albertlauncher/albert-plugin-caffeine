@@ -20,36 +20,64 @@
 <context>
     <name>Plugin</name>
     <message>
-        <source>[h:]min</source>
-        <translation></translation>
-    </message>
-    <message>
         <source>si </source>
         <comment>abbr of name()</comment>
         <translation></translation>
     </message>
     <message>
-        <source>Albert inhibits sleep</source>
+        <source>Caffeine</source>
         <translation></translation>
     </message>
     <message>
-        <source>Click to stop the sleep inhibition</source>
+        <source>Sleep inhibition</source>
         <translation></translation>
     </message>
     <message>
-        <source>Inhibit sleep for %1</source>
+        <source>Activate sleep inhibition</source>
         <translation></translation>
     </message>
     <message>
-        <source>Inhibit sleep</source>
+        <source>Activate sleep inhibition for %1</source>
         <translation></translation>
     </message>
     <message>
-        <source>Stop sleep inhibition</source>
+        <source>Deactivate sleep inhibition</source>
         <translation></translation>
     </message>
     <message>
-        <source>Invalid interval. %1.</source>
+        <source>[duration]</source>
+        <translation>[Dauer]</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n hour(s)</source>
+        <comment>accusative case</comment>
+        <translation>
+            <numerusform>one hour</numerusform>
+            <numerusform>%n hours</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>%n minute(s)</source>
+        <comment>accusative case</comment>
+        <translation>
+            <numerusform>one minute</numerusform>
+            <numerusform>%n minutes</numerusform>
+        </translation>
+    </message>
+    <message>
+        <source> and </source>
+        <translation></translation>
+    </message>
+    <message>
+        <source>Sleep inhibition activated.</source>
+        <translation></translation>
+    </message>
+    <message>
+        <source>Click to deactivate.</source>
+        <translation></translation>
+    </message>
+    <message>
+        <source>Sleep inhibition deactivated.</source>
         <translation></translation>
     </message>
 </context>

@@ -9,8 +9,6 @@
 #include <albert/notification.h>
 #include <albert/property.h>
 
-
-
 class Plugin : public albert::ExtensionPlugin,
                public albert::GlobalQueryHandler
 {
@@ -31,9 +29,14 @@ public:
     std::vector<std::shared_ptr<albert::Item>> handleEmptyQuery() override;
 
 private:
-    std::shared_ptr<albert::Item> makeItem(const QString &query_string = {});
+    QString makeActionName(uint minutes) const;
+    std::shared_ptr<albert::Item> makeTriggerItem(const QString action_name,
+                                                  std::function<void()> action);
+    std::shared_ptr<albert::Item> makeGlobalItem(const QString action_name,
+                                                 std::function<void()> action);
     void start(uint minutes);
     void stop();
+    bool isActive() const;
 
     QProcess process;
     QTimer timer;
@@ -43,5 +46,13 @@ private:
     QString trigger;
 
     ALBERT_PLUGIN_PROPERTY(uint, default_timeout, 60)
+
+    struct{
+        QString caffeine;
+        QString sleep_inhibition;
+        QString activate_sleep_inhibition;
+        QString activate_sleep_inhibition_for_n_minutes;
+        QString deactivate_sleep_inhibition;
+    } const strings;
 
 };
