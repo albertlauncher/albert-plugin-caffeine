@@ -1,12 +1,12 @@
-// Copyright (c) 2017-2024 Manuel Schneider
+// Copyright (c) 2017-2025 Manuel Schneider
 
 #include "plugin.h"
 #include "ui_configwidget.h"
 #include <QStandardPaths>
 #include <albert/logging.h>
-#include <albert/logging.h>
 #include <albert/matcher.h>
 #include <albert/standarditem.h>
+#include <albert/widgets.h>
 ALBERT_LOGGING_CATEGORY("caffeine")
 using namespace albert;
 using namespace std;
@@ -88,7 +88,13 @@ QWidget* Plugin::buildConfigWidget()
     auto *w = new QWidget;
     Ui::ConfigWidget ui;
     ui.setupUi(w);
-    ALBERT_PROPERTY_CONNECT_SPINBOX(this, default_timeout, ui.spinBox_minutes)
+
+    albert::util::widgets::bind(ui.spinBox_minutes,
+                                this,
+                                &Plugin::default_timeout,
+                                &Plugin::set_default_timeout,
+                                &Plugin::default_timeout_changed);
+
     return w;
 }
 
