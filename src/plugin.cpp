@@ -6,10 +6,11 @@
 #include <albert/logging.h>
 #include <albert/matcher.h>
 #include <albert/standarditem.h>
-#include <albert/widgets.h>
+#include <albert/widgetsutil.h>
 ALBERT_LOGGING_CATEGORY("caffeine")
 using namespace albert;
 using namespace std;
+using namespace util;
 
 const QStringList Plugin::icon_urls = {"gen:?text=☕️"};
 
@@ -89,11 +90,11 @@ QWidget* Plugin::buildConfigWidget()
     Ui::ConfigWidget ui;
     ui.setupUi(w);
 
-    albert::util::widgets::bind(ui.spinBox_minutes,
-                                this,
-                                &Plugin::default_timeout,
-                                &Plugin::set_default_timeout,
-                                &Plugin::default_timeout_changed);
+    bind(ui.spinBox_minutes,
+         this,
+         &Plugin::default_timeout,
+         &Plugin::set_default_timeout,
+         &Plugin::default_timeout_changed);
 
     return w;
 }

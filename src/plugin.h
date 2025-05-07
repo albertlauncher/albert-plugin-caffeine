@@ -40,7 +40,7 @@ private:
 
     QProcess process;
     QTimer timer;
-    albert::Notification notification;
+    albert::util::Notification notification;
     QStringList commandline;
     static const QStringList icon_urls;
     QString trigger;
