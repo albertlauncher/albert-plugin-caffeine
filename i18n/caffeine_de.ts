@@ -25,10 +25,6 @@
         <translation>su </translation>
     </message>
     <message>
-        <source>Albert inhibits sleep</source>
-        <translation type="vanished">Albert unterdrückt den Schlafmodus</translation>
-    </message>
-    <message>
         <source>Caffeine</source>
         <translation>Koffein</translation>
     </message>
@@ -51,10 +47,6 @@
     <message>
         <source>[duration]</source>
         <translation>[Dauer]</translation>
-    </message>
-    <message>
-        <source>Click to deactivate sleep inhibition</source>
-        <translation type="vanished">Klicken um die Schlafmodusunterdrückung zu deaktivieren</translation>
     </message>
     <message>
         <source> and </source>
