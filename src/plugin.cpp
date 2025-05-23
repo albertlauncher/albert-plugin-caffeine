@@ -8,11 +8,12 @@
 #include <albert/standarditem.h>
 #include <albert/widgetsutil.h>
 ALBERT_LOGGING_CATEGORY("caffeine")
+using namespace Qt::StringLiterals;
 using namespace albert;
 using namespace std;
 using namespace util;
 
-const QStringList Plugin::icon_urls = {"gen:?text=☕️"};
+const QStringList Plugin::icon_urls = {u"gen:?text=☕️"_s};
 
 static QString durationString(uint min)
 {
@@ -25,8 +26,8 @@ static QString durationString(uint min)
 
 static uint parseDurationString(const QString &s)
 {
-    static QRegularExpression re_nat(R"(^(?:(\d+)h\ *)?(?:(\d+)m)?$)");
-    static QRegularExpression re_dig(R"(^(?|(\d+):(\d*)|()(\d+))$)");
+    static QRegularExpression re_nat(uR"(^(?:(\d+)h\ *)?(?:(\d+)m)?$)"_s);
+    static QRegularExpression re_dig(uR"(^(?|(\d+):(\d*)|()(\d+))$)"_s);
 
     uint minutes = 0;
     if (auto m = re_nat.match(s); m.hasMatch() && m.capturedLength())  // required because all optional matches empty string
@@ -53,15 +54,15 @@ Plugin::Plugin():
     })
 {
 #if defined(Q_OS_MAC)
-    process.setProgram("caffeinate");
-    process.setArguments({"-d", "-i"});
+    process.setProgram(u"caffeinate"_s);
+    process.setArguments({u"-d"_s, u"-i"_s});
 #elif defined(Q_OS_UNIX)
-    process.setProgram("systemd-inhibit");
-    process.setArguments({"--what=idle:sleep",
-                          QString("--who=%1").arg(QCoreApplication::applicationName()),
-                          "--why=User",
-                          "sleep",
-                          "infinity"});
+    process.setProgram(u"systemd-inhibit"_s);
+    process.setArguments({u"--what=idle:sleep"_s,
+                          QString(u"--who=%1"_s).arg(QCoreApplication::applicationName()),
+                          u"--why=User"_s,
+                          u"sleep"_s,
+                          u"infinity"_s});
 #else
     throw runtime_error("Unsupported OS");
 #endif
@@ -116,7 +117,7 @@ void Plugin::start(uint minutes)
     {
         INFO << "Sleep inhibition activated";
 
-        notification.setText(tr("Sleep inhibition activated.") + "\n"
+        notification.setText(tr("Sleep inhibition activated.") + QChar::LineFeed
                              + tr("Click to deactivate."));
         notification.dismiss();
         notification.send();
