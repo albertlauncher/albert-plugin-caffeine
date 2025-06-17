@@ -13,7 +13,9 @@ using namespace albert;
 using namespace std;
 using namespace util;
 
-const QStringList Plugin::icon_urls = {u"gen:?text=☕️"_s};
+namespace {
+static const QStringList icon_urls = {u"gen:?text=☕️"_s};
+}
 
 static QString durationString(uint min)
 {
@@ -153,56 +155,65 @@ QString Plugin::makeActionName(uint minutes) const
         return strings.activate_sleep_inhibition;
 }
 
-shared_ptr<Item> Plugin::makeTriggerItem(const QString action_name, function<void()> action)
+shared_ptr<StandardItem> Plugin::makeDefaultItem()
 {
-    return StandardItem::make(id(), name(), action_name, icon_urls,
-                              {{ id(), action_name, action }});
-}
-
-shared_ptr<Item> Plugin::makeGlobalItem(const QString action_name, function<void()> action)
-{
-    return StandardItem::make(id(), name(), action_name, name(), icon_urls,
-                              {{ id(), action_name, action }});
+    if (isActive())
+        return StandardItem::make(id(),
+                                  name(),
+                                  strings.deactivate_sleep_inhibition,
+                                  icon_urls,
+                                  {{id(), strings.deactivate_sleep_inhibition,
+                                    [this]{ stop(); }}},
+                                  trigger
+                                  );
+    else
+        return StandardItem::make(id(),
+                                  name(),
+                                  makeActionName(default_timeout_),
+                                  icon_urls,
+                                  {{id(), strings.activate_sleep_inhibition,
+                                    [this]{ start(default_timeout_); } }},
+                                  trigger
+                                  );
 }
 
 void Plugin::handleTriggerQuery(Query &query)
 {
     if (auto s = query.string().trimmed(); s.isEmpty())
-
-        if (isActive())
-            query.add(makeTriggerItem(strings.deactivate_sleep_inhibition,
-                                      [this]{ stop(); }));
-        else
-            query.add(makeTriggerItem(makeActionName(default_timeout_),
-                                      [this]{ start(default_timeout_); }));
+    {
+        auto item = makeDefaultItem();
+        item->setInputActionText(u""_s);  // remove input action text
+        query.add(::move(item));
+    }
 
     else if (auto minutes = parseDurationString(s); minutes)
-
-        query.add(makeTriggerItem(makeActionName(minutes),
-                                  [this, minutes]{ start(minutes); }));
+    {
+        query.add(StandardItem::make(id(),
+                                     name(),
+                                     makeActionName(minutes),
+                                     icon_urls,
+                                     {{id(), strings.activate_sleep_inhibition,
+                                       [this, minutes] { start(minutes); }}},
+                                     u""_s  // no completion
+                                     ));
+    }
 }
 
 vector<RankItem> Plugin::handleGlobalQuery(const Query &query)
 {
     vector<RankItem> r;
     if (auto m = Matcher(query).match(strings.caffeine, strings.sleep_inhibition); m)
-    {
-        if (isActive())
-            r.emplace_back(makeTriggerItem(strings.deactivate_sleep_inhibition,
-                                           [this]{ stop(); }),
-                           m);
-        else
-            r.emplace_back(makeTriggerItem(makeActionName(default_timeout_),
-                                           [this]{ start(default_timeout_); }),
-                           m);
-    }
+        r.emplace_back(makeDefaultItem(), m);
     return r;
 }
 
 vector<shared_ptr<Item>> Plugin::handleEmptyQuery()
 {
     vector<shared_ptr<Item>> r;
-    if (isActive())
-        r.emplace_back(makeTriggerItem(strings.deactivate_sleep_inhibition, [this]{ stop(); }));
+    if (isActive()){
+        auto item = makeDefaultItem();
+        item->setInputActionText(u""_s);  // remove completion
+        r.emplace_back(::move(item));
+    }
     return r;
 }

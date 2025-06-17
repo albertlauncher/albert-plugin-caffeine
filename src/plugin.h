@@ -8,8 +8,9 @@
 #include <albert/globalqueryhandler.h>
 #include <albert/notification.h>
 #include <albert/property.h>
+namespace albert::util { class StandardItem; }
 
-class Plugin : public albert::ExtensionPlugin,
+class Plugin : public albert::util::ExtensionPlugin,
                public albert::GlobalQueryHandler
 {
     ALBERT_PLUGIN
@@ -30,10 +31,7 @@ public:
 
 private:
     QString makeActionName(uint minutes) const;
-    std::shared_ptr<albert::Item> makeTriggerItem(const QString action_name,
-                                                  std::function<void()> action);
-    std::shared_ptr<albert::Item> makeGlobalItem(const QString action_name,
-                                                 std::function<void()> action);
+    std::shared_ptr<albert::util::StandardItem> makeDefaultItem();
     void start(uint minutes);
     void stop();
     bool isActive() const;
@@ -42,7 +40,6 @@ private:
     QTimer timer;
     albert::util::Notification notification;
     QStringList commandline;
-    static const QStringList icon_urls;
     QString trigger;
 
     ALBERT_PLUGIN_PROPERTY(uint, default_timeout, 60)
