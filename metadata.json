@@ -3,6 +3,7 @@
     "description": "Inhibit sleep mode",
     "description[de]": "Schlafmodus unterdrücken",
     "license": "MIT",
+    "maintainers": ["@manuelschneid3r"],
     "name": "Caffeine",
     "name[de]": "Koffein",
     "url": "https://github.com/albertlauncher/albert-plugin-caffeine",
