@@ -1,1 +1,1 @@
-# albert-plugin-caffeine
+# Albert plugin: Caffeine
