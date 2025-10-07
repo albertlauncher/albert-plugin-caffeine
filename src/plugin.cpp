@@ -3,6 +3,7 @@
 #include "plugin.h"
 #include "ui_configwidget.h"
 #include <QStandardPaths>
+#include <albert/iconutil.h>
 #include <albert/logging.h>
 #include <albert/matcher.h>
 #include <albert/standarditem.h>
@@ -14,7 +15,7 @@ using namespace std;
 using namespace util;
 
 namespace {
-static const QStringList icon_urls = {u"gen:?text=☕️"_s};
+static unique_ptr<Icon> makeIcon() { return makeGraphemeIcon(u"☕️"_s); }
 }
 
 static QString durationString(uint min)
@@ -161,7 +162,7 @@ shared_ptr<StandardItem> Plugin::makeDefaultItem()
         return StandardItem::make(id(),
                                   name(),
                                   strings.deactivate_sleep_inhibition,
-                                  icon_urls,
+                                  makeIcon,
                                   {{id(), strings.deactivate_sleep_inhibition,
                                     [this]{ stop(); }}},
                                   trigger
@@ -170,7 +171,7 @@ shared_ptr<StandardItem> Plugin::makeDefaultItem()
         return StandardItem::make(id(),
                                   name(),
                                   makeActionName(default_timeout_),
-                                  icon_urls,
+                                  makeIcon,
                                   {{id(), strings.activate_sleep_inhibition,
                                     [this]{ start(default_timeout_); } }},
                                   trigger
@@ -191,7 +192,7 @@ void Plugin::handleTriggerQuery(Query &query)
         query.add(StandardItem::make(id(),
                                      name(),
                                      makeActionName(minutes),
-                                     icon_urls,
+                                     makeIcon,
                                      {{id(), strings.activate_sleep_inhibition,
                                        [this, minutes] { start(minutes); }}},
                                      u""_s  // no completion
