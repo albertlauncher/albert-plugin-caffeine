@@ -18,12 +18,12 @@
    <item row="0" column="0">
     <widget class="QLabel" name="label">
      <property name="text">
-      <string>Default interval</string>
+      <string>Default duration</string>
      </property>
     </widget>
    </item>
    <item row="0" column="1">
-    <widget class="QSpinBox" name="spinBox_minutes">
+    <widget class="QSpinBox" name="spinBox_defaultDuration">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
        <horstretch>0</horstretch>

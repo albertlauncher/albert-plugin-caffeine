@@ -9,12 +9,12 @@
         <translation> Min</translation>
     </message>
     <message>
-        <source>Default interval</source>
-        <translation>Standardinterval</translation>
-    </message>
-    <message>
         <source>∞ min</source>
         <translation>∞ Min</translation>
+    </message>
+    <message>
+        <source>Default duration</source>
+        <translation>Standarddauer</translation>
     </message>
 </context>
 <context>

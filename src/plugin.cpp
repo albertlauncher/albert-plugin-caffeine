@@ -2,6 +2,7 @@
 
 #include "plugin.h"
 #include "ui_configwidget.h"
+#include <QSettings>
 #include <QStandardPaths>
 #include <albert/iconutil.h>
 #include <albert/logging.h>
@@ -12,10 +13,10 @@ ALBERT_LOGGING_CATEGORY("caffeine")
 using namespace Qt::StringLiterals;
 using namespace albert;
 using namespace std;
-using namespace util;
 
 namespace {
 static unique_ptr<Icon> makeIcon() { return makeGraphemeIcon(u"☕️"_s); }
+const auto ck_default_duration = "default_duration";
 }
 
 static QString durationString(uint min)
@@ -73,7 +74,7 @@ Plugin::Plugin():
     if (auto e = QStandardPaths::findExecutable(process.program()); e.isEmpty())
         throw runtime_error(process.program().toStdString() + " not found");
 
-    restore_default_timeout(settings());
+    default_duration_ = settings()->value(ck_default_duration, 60u).value<uint>();
 
     timer.setSingleShot(true);
 
@@ -94,11 +95,7 @@ QWidget* Plugin::buildConfigWidget()
     Ui::ConfigWidget ui;
     ui.setupUi(w);
 
-    bind(ui.spinBox_minutes,
-         this,
-         &Plugin::default_timeout,
-         &Plugin::set_default_timeout,
-         &Plugin::default_timeout_changed);
+    bindWidget(ui.spinBox_defaultDuration, this, &Plugin::defaultDuration, &Plugin::setDefaultDuration);
 
     return w;
 }
@@ -170,41 +167,42 @@ shared_ptr<StandardItem> Plugin::makeDefaultItem()
     else
         return StandardItem::make(id(),
                                   name(),
-                                  makeActionName(default_timeout_),
+                                  makeActionName(default_duration_),
                                   makeIcon,
                                   {{id(), strings.activate_sleep_inhibition,
-                                    [this]{ start(default_timeout_); } }},
+                                    [this]{ start(default_duration_); } }},
                                   trigger
                                   );
 }
 
-void Plugin::handleTriggerQuery(Query &query)
+vector<RankItem> Plugin::rankItems(QueryContext &ctx)
 {
-    if (auto s = query.string().trimmed(); s.isEmpty())
+    vector<RankItem> r;
+    if (ctx.trigger().isEmpty())
+    {
+        if (auto m = Matcher(ctx).match(strings.caffeine, strings.sleep_inhibition); m)
+            r.emplace_back(makeDefaultItem(), m);
+    }
+
+    else if (auto s = ctx.query().trimmed(); s.isEmpty())
     {
         auto item = makeDefaultItem();
         item->setInputActionText(u""_s);  // remove input action text
-        query.add(::move(item));
+        r.emplace_back(::move(item), .0);
     }
 
     else if (auto minutes = parseDurationString(s); minutes)
     {
-        query.add(StandardItem::make(id(),
-                                     name(),
-                                     makeActionName(minutes),
-                                     makeIcon,
-                                     {{id(), strings.activate_sleep_inhibition,
-                                       [this, minutes] { start(minutes); }}},
-                                     u""_s  // no completion
-                                     ));
+        r.emplace_back(StandardItem::make(id(),
+                                          name(),
+                                          makeActionName(minutes),
+                                          makeIcon,
+                                          {{id(), strings.activate_sleep_inhibition,
+                                            [this, minutes] { start(minutes); }}},
+                                          u""_s  // no completion
+                                          )
+                       , .0);
     }
-}
-
-vector<RankItem> Plugin::handleGlobalQuery(const Query &query)
-{
-    vector<RankItem> r;
-    if (auto m = Matcher(query).match(strings.caffeine, strings.sleep_inhibition); m)
-        r.emplace_back(makeDefaultItem(), m);
     return r;
 }
 
@@ -217,4 +215,15 @@ vector<shared_ptr<Item>> Plugin::handleEmptyQuery()
         r.emplace_back(::move(item));
     }
     return r;
+}
+
+uint Plugin::defaultDuration() const { return default_duration_; }
+
+void Plugin::setDefaultDuration(uint v)
+{
+    if (default_duration_ != v)
+    {
+        default_duration_ = v;
+        settings()->setValue(ck_default_duration, v);
+    }
 }

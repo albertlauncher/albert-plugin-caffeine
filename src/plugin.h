@@ -7,10 +7,9 @@
 #include <albert/extensionplugin.h>
 #include <albert/globalqueryhandler.h>
 #include <albert/notification.h>
-#include <albert/property.h>
-namespace albert::util { class StandardItem; }
+namespace albert { class StandardItem; }
 
-class Plugin : public albert::util::ExtensionPlugin,
+class Plugin : public albert::ExtensionPlugin,
                public albert::GlobalQueryHandler
 {
     ALBERT_PLUGIN
@@ -25,26 +24,27 @@ public:
     QString synopsis(const QString &) const override;
     void setTrigger(const QString&) override;
     QString defaultTrigger() const override;
-    void handleTriggerQuery(albert::Query &) override;
-    std::vector<albert::RankItem> handleGlobalQuery(const albert::Query &) override;
+    std::vector<albert::RankItem> rankItems(albert::QueryContext &) override;
     std::vector<std::shared_ptr<albert::Item>> handleEmptyQuery() override;
+
+    uint defaultDuration() const;
+    void setDefaultDuration(uint minutes);
 
 private:
     QString makeActionName(uint minutes) const;
-    std::shared_ptr<albert::util::StandardItem> makeDefaultItem();
+    std::shared_ptr<albert::StandardItem> makeDefaultItem();
     void start(uint minutes);
     void stop();
     bool isActive() const;
 
     QProcess process;
     QTimer timer;
-    albert::util::Notification notification;
+    albert::Notification notification;
     QStringList commandline;
     QString trigger;
+    uint default_duration_;
 
-    ALBERT_PLUGIN_PROPERTY(uint, default_timeout, 60)
-
-    struct{
+    struct {
         QString caffeine;
         QString sleep_inhibition;
         QString activate_sleep_inhibition;
