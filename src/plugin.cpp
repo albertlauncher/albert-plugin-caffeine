@@ -4,7 +4,7 @@
 #include "ui_configwidget.h"
 #include <QSettings>
 #include <QStandardPaths>
-#include <albert/iconutil.h>
+#include <albert/icon.h>
 #include <albert/logging.h>
 #include <albert/matcher.h>
 #include <albert/standarditem.h>
@@ -15,7 +15,7 @@ using namespace albert;
 using namespace std;
 
 namespace {
-static unique_ptr<Icon> makeIcon() { return makeGraphemeIcon(u"☕️"_s); }
+static unique_ptr<Icon> makeIcon() { return Icon::grapheme(u"☕️"_s); }
 const auto ck_default_duration = "default_duration";
 }
 
