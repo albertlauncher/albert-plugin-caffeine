@@ -102,7 +102,7 @@ QWidget* Plugin::buildConfigWidget()
 
 QString Plugin::synopsis(const QString &) const { return tr("[duration]"); }
 
-void Plugin::setTrigger(const QString &t) { trigger = t; }
+void Plugin::onTriggerChanged(const QString &t) { trigger = t; }
 
 QString Plugin::defaultTrigger() const { return tr("si ", "abbr of name()"); }
 
@@ -175,7 +175,7 @@ shared_ptr<StandardItem> Plugin::makeDefaultItem()
                                   );
 }
 
-vector<RankItem> Plugin::rankItems(QueryContext &ctx)
+vector<RankItem> Plugin::rankItems(QueryContext ctx)
 {
     vector<RankItem> r;
     if (ctx.trigger().isEmpty())
