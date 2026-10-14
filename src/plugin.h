@@ -4,6 +4,7 @@
 #include <QProcess>
 #include <QStringList>
 #include <QTimer>
+#include <memory>
 #include <albert/extensionplugin.h>
 #include <albert/globalqueryhandler.h>
 #include <albert/notification.h>
@@ -39,7 +40,7 @@ private:
 
     QProcess process;
     QTimer timer;
-    albert::Notification notification;
+    std::unique_ptr<albert::Notification> notification;
     QStringList commandline;
     QString trigger;
     uint default_duration_;

@@ -79,9 +79,6 @@ Plugin::Plugin():
     timer.setSingleShot(true);
 
     QObject::connect(&timer, &QTimer::timeout, this, [this]{ stop(); });
-    QObject::connect(&notification, &Notification::activated, this, [this]{ stop(); });
-
-    notification.setTitle(name());
 }
 
 Plugin::~Plugin()
@@ -117,10 +114,17 @@ void Plugin::start(uint minutes)
     {
         INFO << "Sleep inhibition activated";
 
-        notification.setText(tr("Sleep inhibition activated.") + QChar::LineFeed
-                             + tr("Click to deactivate."));
-        notification.dismiss();
-        notification.send();
+        if (!notification)
+        {
+            notification = make_unique<Notification>();
+            QObject::connect(notification.get(), &Notification::activated, this, [this]{ stop(); });
+            notification->setTitle(name());
+        }
+
+        notification->setText(tr("Sleep inhibition activated.") + QChar::LineFeed
+                              + tr("Click to deactivate."));
+        notification->dismiss();
+        notification->send();
 
         if (minutes > 0)
             timer.start(minutes * 60 * 1000);
@@ -133,9 +137,12 @@ void Plugin::stop()
     {
         INFO << "Sleep inhibition deactivated";
 
-        notification.setText(tr("Sleep inhibition deactivated."));
-        notification.dismiss();
-        notification.send();
+        if (notification)
+        {
+            notification->setText(tr("Sleep inhibition deactivated."));
+            notification->dismiss();
+            notification->send();
+        }
 
         process.kill();
         process.waitForFinished();
