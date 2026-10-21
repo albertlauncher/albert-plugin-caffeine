@@ -57,7 +57,7 @@ Plugin::Plugin():
         .deactivate_sleep_inhibition=tr("Deactivate sleep inhibition")
     })
 {
-#if defined(Q_OS_MAC)
+#if defined(Q_OS_MACOS)
     process.setProgram(u"caffeinate"_s);
     process.setArguments({u"-d"_s, u"-i"_s});
 #elif defined(Q_OS_UNIX)
